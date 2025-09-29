@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Biblia RV 1960",
+    "slug": "biblia-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tuempresa.bibliaapp"
+    },
+    "android": {
+      "package": "com.tuempresa.bibliaapp",
+      "permissions": []
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
+  }
+}
