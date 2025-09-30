@@ -14,12 +14,14 @@ import {
   Modal,
   TextInput
 } from 'react-native';
-import { Colors, Layout } from '../constants';
+import { Layout } from '../constants';
+import { useColors } from '../hooks/useColors';
 import CustomHeader from '../components/navigation/CustomHeader';
 import SearchBar from '../components/ui/SearchBar';
 import { plansService, ReadingPlan } from '../services/storage/PlansService';
 
 export default function PlanesScreen() {
+  const colors = useColors();
   const navigation = useNavigation<any>();
   const [plans, setPlans] = useState<ReadingPlan[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -157,96 +159,104 @@ export default function PlanesScreen() {
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress < 30) return Colors.danger;
-    if (progress < 70) return Colors.warning;
-    return Colors.success;
+    if (progress < 30) return colors.danger;
+    if (progress < 70) return colors.warning;
+    return colors.success;
   };
 
   const renderPlan = ({ item }: { item: ReadingPlan }) => (
-    <View style={[styles.planCard, item.isActive && styles.activePlanCard]}>
+    <View style={[
+      styles.planCard,
+      { backgroundColor: colors.background.card, borderColor: colors.border.light },
+      item.isActive && { borderColor: colors.primary, backgroundColor: colors.primary + '05' }
+    ]}>
       <View style={styles.planHeader}>
         <View style={styles.planInfo}>
-          <Text style={[styles.planTitle, item.isActive && styles.activePlanTitle]}>
+          <Text style={[
+            styles.planTitle,
+            { color: colors.text.primary },
+            item.isActive && { color: colors.primary }
+          ]}>
             {item.title}
           </Text>
-          <Text style={styles.planDuration}>{item.duration}</Text>
+          <Text style={[styles.planDuration, { color: colors.text.secondary }]}>{item.duration}</Text>
         </View>
-        
+
         <View style={styles.planActions}>
           {item.isActive && (
-            <View style={styles.activeBadge}>
-              <Text style={styles.activeBadgeText}>Activo</Text>
+            <View style={[styles.activeBadge, { backgroundColor: colors.success }]}>
+              <Text style={[styles.activeBadgeText, { color: colors.text.white }]}>Activo</Text>
             </View>
           )}
           <TouchableOpacity onPress={() => deletePlan(item.id)}>
-            <Ionicons name="trash-outline" size={20} color={Colors.danger} />
+            <Ionicons name="trash-outline" size={20} color={colors.danger} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <Text style={styles.planDescription}>{item.description}</Text>
+      <Text style={[styles.planDescription, { color: colors.text.primary }]}>{item.description}</Text>
 
       <View style={styles.progressContainer}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressLabel}>Progreso</Text>
-          <Text style={styles.progressPercentage}>{item.progress}%</Text>
+          <Text style={[styles.progressLabel, { color: colors.text.secondary }]}>Progreso</Text>
+          <Text style={[styles.progressPercentage, { color: colors.text.primary }]}>{item.progress}%</Text>
         </View>
-        <View style={styles.progressBar}>
-          <View 
+        <View style={[styles.progressBar, { backgroundColor: colors.background.secondary }]}>
+          <View
             style={[
-              styles.progressFill, 
-              { 
+              styles.progressFill,
+              {
                 width: `${item.progress}%`,
                 backgroundColor: getProgressColor(item.progress)
               }
-            ]} 
+            ]}
           />
         </View>
       </View>
 
       {!item.isActive && (
         <TouchableOpacity
-          style={styles.activateButton}
+          style={[styles.activateButton, { backgroundColor: colors.primary }]}
           onPress={() => activatePlan(item.id)}
         >
-          <Text style={styles.activateButtonText}>Comenzar Plan</Text>
+          <Text style={[styles.activateButtonText, { color: colors.text.white }]}>Comenzar Plan</Text>
         </TouchableOpacity>
       )}
 
       {item.isActive && (
-        <TouchableOpacity style={styles.continueButton}>
-          <Text style={styles.continueButtonText}>Continuar Lectura</Text>
+        <TouchableOpacity style={[styles.continueButton, { backgroundColor: colors.success }]}>
+          <Text style={[styles.continueButtonText, { color: colors.text.white }]}>Continuar Lectura</Text>
         </TouchableOpacity>
       )}
     </View>
   );
 
   const renderAvailablePlan = ({ item }: { item: ReadingPlan }) => (
-    <TouchableOpacity 
-      style={styles.availablePlanCard}
+    <TouchableOpacity
+      style={[styles.availablePlanCard, { backgroundColor: colors.background.card, borderColor: colors.border.light }]}
       onPress={() => addAvailablePlan(item)}
     >
       <View style={styles.availablePlanContent}>
-        <Text style={styles.availablePlanTitle}>{item.title}</Text>
-        <Text style={styles.availablePlanDescription}>{item.description}</Text>
-        <Text style={styles.availablePlanDuration}>{item.duration}</Text>
+        <Text style={[styles.availablePlanTitle, { color: colors.text.primary }]}>{item.title}</Text>
+        <Text style={[styles.availablePlanDescription, { color: colors.text.secondary }]}>{item.description}</Text>
+        <Text style={[styles.availablePlanDuration, { color: colors.primary }]}>{item.duration}</Text>
       </View>
-      <Ionicons name="add-circle-outline" size={32} color={Colors.primary} />
+      <Ionicons name="add-circle-outline" size={32} color={colors.primary} />
     </TouchableOpacity>
   );
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="calendar-outline" size={80} color={Colors.text.tertiary} />
-      <Text style={styles.emptyTitle}>Sin planes activos</Text>
-      <Text style={styles.emptySubtitle}>
+      <Ionicons name="calendar-outline" size={80} color={colors.text.tertiary} />
+      <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Sin planes activos</Text>
+      <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
         Crea o selecciona un plan de lectura para comenzar
       </Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <CustomHeader
         title="Planes de Lectura"
         subtitle="Organiza tu estudio bíblico"
@@ -271,13 +281,13 @@ export default function PlanesScreen() {
         ListHeaderComponent={() => (
           <View>
             {filteredPlans.length > 0 && (
-              <Text style={styles.sectionTitle}>Mis Planes</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Mis Planes</Text>
             )}
           </View>
         )}
         ListFooterComponent={() => (
           <View>
-            <Text style={styles.sectionTitle}>Planes Disponibles</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Planes Disponibles</Text>
             <FlatList
               data={availablePlans}
               renderItem={renderAvailablePlan}
@@ -290,11 +300,11 @@ export default function PlanesScreen() {
       />
 
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, { backgroundColor: colors.primary }]}
         onPress={() => setIsModalVisible(true)}
         activeOpacity={0.8}
       >
-        <Ionicons name="add" size={28} color={Colors.text.white} />
+        <Ionicons name="add" size={28} color={colors.text.white} />
       </TouchableOpacity>
 
       <Modal
@@ -304,27 +314,27 @@ export default function PlanesScreen() {
         onRequestClose={() => setIsModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background.primary }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Crear Plan Personalizado</Text>
+              <Text style={[styles.modalTitle, { color: colors.text.primary }]}>Crear Plan Personalizado</Text>
               <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <Ionicons name="close" size={24} color={Colors.text.secondary} />
+                <Ionicons name="close" size={24} color={colors.text.secondary} />
               </TouchableOpacity>
             </View>
 
             <TextInput
-              style={styles.titleInput}
+              style={[styles.titleInput, { borderColor: colors.border.light, color: colors.text.primary, backgroundColor: colors.background.secondary }]}
               placeholder="Título del plan"
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={colors.text.secondary}
               value={newPlanTitle}
               onChangeText={setNewPlanTitle}
               maxLength={50}
             />
 
             <TextInput
-              style={styles.descriptionInput}
+              style={[styles.descriptionInput, { borderColor: colors.border.light, color: colors.text.primary, backgroundColor: colors.background.secondary }]}
               placeholder="Descripción del plan..."
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={colors.text.secondary}
               value={newPlanDescription}
               onChangeText={setNewPlanDescription}
               multiline
@@ -333,17 +343,17 @@ export default function PlanesScreen() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.modalButton, styles.cancelButton, { backgroundColor: colors.background.secondary, borderColor: colors.border.light }]}
                 onPress={() => setIsModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <Text style={[styles.cancelButtonText, { color: colors.text.secondary }]}>Cancelar</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
+                style={[styles.modalButton, styles.saveButton, { backgroundColor: colors.primary }]}
                 onPress={createCustomPlan}
               >
-                <Text style={styles.saveButtonText}>Crear Plan</Text>
+                <Text style={[styles.saveButtonText, { color: colors.text.white }]}>Crear Plan</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -356,7 +366,6 @@ export default function PlanesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   listContainer: {
     padding: Layout.spacing.md,
@@ -367,17 +376,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.md,
     marginTop: Layout.spacing.lg,
   },
   planCard: {
-    backgroundColor: Colors.background.card,
     borderRadius: Layout.borderRadius.lg,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border.light,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -385,8 +391,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   activePlanCard: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '05',
   },
   planHeader: {
     flexDirection: 'row',
@@ -400,15 +404,12 @@ const styles = StyleSheet.create({
   planTitle: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.xs,
   },
   activePlanTitle: {
-    color: Colors.primary,
   },
   planDuration: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     fontWeight: '500',
   },
   planActions: {
@@ -417,19 +418,16 @@ const styles = StyleSheet.create({
     gap: Layout.spacing.sm,
   },
   activeBadge: {
-    backgroundColor: Colors.success,
     paddingHorizontal: Layout.spacing.sm,
     paddingVertical: Layout.spacing.xs,
     borderRadius: Layout.borderRadius.sm,
   },
   activeBadgeText: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.white,
     fontWeight: '600',
   },
   planDescription: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     lineHeight: 22,
     marginBottom: Layout.spacing.md,
   },
@@ -444,17 +442,14 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     fontWeight: '500',
   },
   progressPercentage: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.primary,
     fontWeight: '600',
   },
   progressBar: {
     height: 8,
-    backgroundColor: Colors.background.secondary,
     borderRadius: Layout.borderRadius.sm,
     overflow: 'hidden',
   },
@@ -463,36 +458,30 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.sm,
   },
   activateButton: {
-    backgroundColor: Colors.primary,
     paddingVertical: Layout.spacing.sm,
     borderRadius: Layout.borderRadius.md,
     alignItems: 'center',
   },
   activateButtonText: {
-    color: Colors.text.white,
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
   },
   continueButton: {
-    backgroundColor: Colors.success,
     paddingVertical: Layout.spacing.sm,
     borderRadius: Layout.borderRadius.md,
     alignItems: 'center',
   },
   continueButtonText: {
-    color: Colors.text.white,
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
   },
   availablePlanCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background.card,
     borderRadius: Layout.borderRadius.lg,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border.light,
   },
   availablePlanContent: {
     flex: 1,
@@ -501,18 +490,15 @@ const styles = StyleSheet.create({
   availablePlanTitle: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.xs,
   },
   availablePlanDescription: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     lineHeight: 20,
     marginBottom: Layout.spacing.xs,
   },
   availablePlanDuration: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.primary,
     fontWeight: '600',
   },
   addButton: {
@@ -522,7 +508,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -540,13 +525,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginTop: Layout.spacing.lg,
     marginBottom: Layout.spacing.sm,
   },
   emptySubtitle: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -556,7 +539,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.background.primary,
     borderTopLeftRadius: Layout.borderRadius.xl,
     borderTopRightRadius: Layout.borderRadius.xl,
     padding: Layout.spacing.lg,
@@ -571,28 +553,21 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   titleInput: {
     borderWidth: 1,
-    borderColor: Colors.border.light,
     borderRadius: Layout.borderRadius.md,
     padding: Layout.spacing.md,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.md,
-    backgroundColor: Colors.background.secondary,
   },
   descriptionInput: {
     borderWidth: 1,
-    borderColor: Colors.border.light,
     borderRadius: Layout.borderRadius.md,
     padding: Layout.spacing.md,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     height: 100,
     marginBottom: Layout.spacing.lg,
-    backgroundColor: Colors.background.secondary,
   },
   modalActions: {
     flexDirection: 'row',
@@ -606,21 +581,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: Colors.background.secondary,
     borderWidth: 1,
-    borderColor: Colors.border.light,
   },
   saveButton: {
-    backgroundColor: Colors.primary,
   },
   cancelButtonText: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.secondary,
   },
   saveButtonText: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.white,
   },
 });

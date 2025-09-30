@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import AppNavigator from './src/navigation/AppNavigator';
 import { useDatabase } from './src/hooks/useDatabase';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 
 export default function App() {
   const { isLoading, isReady, error } = useDatabase();
@@ -45,7 +46,9 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
-        <AppNavigator />
+        <ThemeProvider>
+          <AppNavigator />
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

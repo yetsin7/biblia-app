@@ -6,8 +6,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import { Platform } from 'react-native';
-import { Colors, Layout } from '../constants';
+import { Layout } from '../constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColors } from '../hooks/useColors';
 
 // Screens
 import ReadingScreen from '../screens/ReadingScreen';
@@ -52,13 +53,14 @@ function ReadingStackNavigator() {
 
 export default function BottomTabNavigator() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
-          
+
           switch (route.name) {
             case 'ReadingStack':
               iconName = focused ? 'book' : 'book-outline';
@@ -78,14 +80,14 @@ export default function BottomTabNavigator() {
             default:
               iconName = 'help-outline';
           }
-          
+
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.text.secondary,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.text.secondary,
         tabBarStyle: {
-          backgroundColor: Colors.background.primary,
-          borderTopColor: Colors.border.light,
+          backgroundColor: colors.background.card,
+          borderTopColor: colors.border.light,
           borderTopWidth: 1,
           height: Layout.heights.tabBar + insets.bottom + (Platform.OS === 'android' ? 8 : 0),
           paddingBottom: insets.bottom + (Platform.OS === 'android' ? 8 : 6),

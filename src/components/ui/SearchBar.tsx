@@ -4,7 +4,8 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Layout } from '../../constants';
+import { Layout } from '../../constants';
+import { useColors } from '../../hooks/useColors';
 
 interface SearchBarProps {
   value: string;
@@ -21,19 +22,20 @@ export default function SearchBar({
   containerStyle,
   autoFocus = false,
 }: SearchBarProps) {
-  
+  const colors = useColors();
+
   const handleClear = () => {
     onChangeText('');
   };
 
   return (
-    <View style={[styles.container, containerStyle]}>
-      <View style={styles.searchInputContainer}>
-        <Ionicons name="search" size={20} color={Colors.text.secondary} />
+    <View style={[styles.container, { backgroundColor: colors.background.secondary, borderBottomColor: colors.border.light }, containerStyle]}>
+      <View style={[styles.searchInputContainer, { backgroundColor: colors.background.primary, borderColor: colors.border.light }]}>
+        <Ionicons name="search" size={20} color={colors.text.secondary} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text.primary }]}
           placeholder={placeholder}
-          placeholderTextColor={Colors.text.secondary}
+          placeholderTextColor={colors.text.secondary}
           value={value}
           onChangeText={onChangeText}
           autoCorrect={false}
@@ -42,7 +44,7 @@ export default function SearchBar({
         />
         {value.length > 0 && (
           <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
-            <Ionicons name="close-circle" size={20} color={Colors.text.secondary} />
+            <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -54,24 +56,19 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
-    backgroundColor: Colors.background.secondary,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background.primary,
     borderRadius: Layout.borderRadius.md,
     paddingHorizontal: Layout.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border.light,
   },
   searchInput: {
     flex: 1,
     height: Layout.heights.input,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     marginLeft: Layout.spacing.sm,
   },
   clearButton: {

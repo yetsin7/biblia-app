@@ -14,7 +14,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Colors, Layout } from '../constants';
+import { Layout } from '../constants';
+import { useColors } from '../hooks/useColors';
 import { BibleQueries } from '../services/database/BibleQueries';
 import { SearchResult } from '../types/Biblia';
 import CustomHeader from '../components/navigation/CustomHeader'; // <-- Importado
@@ -22,6 +23,7 @@ import { useNavigation } from '@react-navigation/native'; // <-- Importado
 import { DrawerNavigationProp } from '@react-navigation/drawer'; // <-- Importado
 
 export default function SearchScreen() {
+  const colors = useColors();
   const navigation = useNavigation<DrawerNavigationProp<any>>(); // <-- Inicializado
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -73,16 +75,16 @@ export default function SearchScreen() {
     };
 
     return (
-      <View style={styles.resultItem}>
+      <View style={[styles.resultItem, { backgroundColor: colors.background.card, borderColor: colors.border.light }]}>
         <View style={styles.resultHeader}>
-          <Text style={styles.resultReference}>
+          <Text style={[styles.resultReference, { color: colors.primary }]}>
             {item.book} {item.chapter}:{item.verse}
           </Text>
           <TouchableOpacity onPress={copyVerse}>
-            <Ionicons name="copy-outline" size={20} color={Colors.primary} />
+            <Ionicons name="copy-outline" size={20} color={colors.primary} />
           </TouchableOpacity>
         </View>
-        <Text style={styles.resultText}>{item.text}</Text>
+        <Text style={[styles.resultText, { color: colors.text.primary }]}>{item.text}</Text>
       </View>
     );
   };
@@ -93,9 +95,9 @@ export default function SearchScreen() {
     if (!hasSearched) {
       return (
         <View style={styles.emptyState}>
-          <Ionicons name="search" size={64} color={Colors.text.tertiary} />
-          <Text style={styles.emptyTitle}>Buscar en la Biblia</Text>
-          <Text style={styles.emptySubtitle}>
+          <Ionicons name="search" size={64} color={colors.text.tertiary} />
+          <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Buscar en la Biblia</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
             Ingresa una palabra o frase para buscar en todos los versículos
           </Text>
         </View>
@@ -105,9 +107,9 @@ export default function SearchScreen() {
     if (searchResults.length === 0) {
       return (
         <View style={styles.emptyState}>
-          <Ionicons name="document-text-outline" size={64} color={Colors.text.tertiary} />
-          <Text style={styles.emptyTitle}>Sin resultados</Text>
-          <Text style={styles.emptySubtitle}>
+          <Ionicons name="document-text-outline" size={64} color={colors.text.tertiary} />
+          <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Sin resultados</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
             No se encontraron versículos que contengan &quot;{searchTerm}&quot;
           </Text>
         </View>
@@ -118,22 +120,22 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* AÑADIDO: Custom Header para la barra superior */}
       <CustomHeader
         title="Búsqueda"
         subtitle="Versículos y frases"
         showBackButton={false}
       />
-      
+
       {/* Barra de búsqueda (anteriormente en el top del render) */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color={Colors.text.secondary} />
+      <View style={[styles.searchContainer, { backgroundColor: colors.background.secondary, borderBottomColor: colors.border.light }]}>
+        <View style={[styles.searchInputContainer, { backgroundColor: colors.background.primary, borderColor: colors.border.light }]}>
+          <Ionicons name="search" size={20} color={colors.text.secondary} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text.primary }]}
             placeholder="Buscar versículos..."
-            placeholderTextColor={Colors.text.secondary}
+            placeholderTextColor={colors.text.secondary}
             value={searchTerm}
             onChangeText={setSearchTerm}
             returnKeyType="search"
@@ -141,21 +143,25 @@ export default function SearchScreen() {
           />
           {searchTerm.length > 0 && (
             <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-              <Ionicons name="close-circle" size={20} color={Colors.text.secondary} />
+              <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
             </TouchableOpacity>
           )}
         </View>
 
         {/* Botón aún disponible (opcional) */}
         <TouchableOpacity
-          style={[styles.searchButton, !searchTerm.trim() && styles.searchButtonDisabled]}
+          style={[
+            styles.searchButton,
+            { backgroundColor: colors.primary },
+            !searchTerm.trim() && [styles.searchButtonDisabled, { backgroundColor: colors.text.tertiary }]
+          ]}
           onPress={() => performSearch()}
           disabled={!searchTerm.trim() || isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color={Colors.text.white} />
+            <ActivityIndicator size="small" color={colors.text.white} />
           ) : (
-            <Text style={styles.searchButtonText}>Buscar</Text>
+            <Text style={[styles.searchButtonText, { color: colors.text.white }]}>Buscar</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -163,7 +169,7 @@ export default function SearchScreen() {
       {/* Resultados */}
       <View style={styles.resultsContainer}>
         {hasSearched && searchResults.length > 0 && (
-          <Text style={styles.resultsCount}>
+          <Text style={[styles.resultsCount, { color: colors.text.secondary }]}>
             {searchResults.length} resultado
             {searchResults.length !== 1 ? 's' : ''} encontrado
             {searchResults.length !== 1 ? 's' : ''}
@@ -186,35 +192,29 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background.primary },
+  container: { flex: 1 },
   searchContainer: {
     flexDirection: 'row',
     padding: Layout.spacing.md,
-    backgroundColor: Colors.background.secondary,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
   },
   searchInputContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background.primary,
     borderRadius: Layout.borderRadius.md,
     paddingHorizontal: Layout.spacing.md,
     marginRight: Layout.spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border.light,
   },
   searchInput: {
     flex: 1,
     height: Layout.heights.input,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     marginLeft: Layout.spacing.sm,
   },
   clearButton: { padding: Layout.spacing.xs },
   searchButton: {
-    backgroundColor: Colors.primary,
     paddingHorizontal: Layout.spacing.lg,
     paddingVertical: Layout.spacing.sm,
     borderRadius: Layout.borderRadius.md,
@@ -222,9 +222,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: 80,
   },
-  searchButtonDisabled: { backgroundColor: Colors.text.tertiary },
+  searchButtonDisabled: {},
   searchButtonText: {
-    color: Colors.text.white,
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
   },
@@ -232,7 +231,6 @@ const styles = StyleSheet.create({
   resultsCount: {
     padding: Layout.spacing.md,
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     fontWeight: '500',
   },
   listContainer: {
@@ -241,12 +239,10 @@ const styles = StyleSheet.create({
   },
   emptyListContainer: { flex: 1, paddingHorizontal: Layout.spacing.md },
   resultItem: {
-    backgroundColor: Colors.background.card,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.sm,
     borderRadius: Layout.borderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.border.light,
   },
   resultHeader: {
     flexDirection: 'row',
@@ -257,18 +253,15 @@ const styles = StyleSheet.create({
   resultReference: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.primary,
   },
   resultText: {
     fontSize: Layout.fontSize.md,
     lineHeight: 22,
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.sm,
   },
   copyButton: { flexDirection: 'row', alignItems: 'center' },
   copyButtonText: {
     marginLeft: 6,
-    color: Colors.primary,
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
   },
@@ -281,14 +274,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginTop: Layout.spacing.lg,
     marginBottom: Layout.spacing.sm,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
   },

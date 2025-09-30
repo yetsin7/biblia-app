@@ -13,7 +13,8 @@ import {
     TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Layout } from '../constants';
+import { Layout } from '../constants';
+import { useColors } from '../hooks/useColors';
 import { BibleQueries } from '../services/database/BibleQueries';
 import { Book } from '../types/Biblia';
 
@@ -32,6 +33,7 @@ export default function BookSelectionModal({
     currentChapter,
     onSelect,
 }: BookSelectionModalProps) {
+    const colors = useColors();
     const [oldTestamentBooks, setOldTestamentBooks] = useState<Book[]>([]);
     const [newTestamentBooks, setNewTestamentBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -85,13 +87,16 @@ export default function BookSelectionModal({
                             key={chapter}
                             style={[
                                 styles.chapterItem,
-                                isCurrent && styles.chapterItemActive,
+                                {
+                                    backgroundColor: isCurrent ? colors.primary : colors.background.card,
+                                    borderColor: isCurrent ? colors.primary : colors.border.light,
+                                }
                             ]}
                             onPress={() => handleChapterSelect(book.id, book.name, chapter)}
                         >
                             <Text style={[
                                 styles.chapterNumber,
-                                isCurrent && styles.chapterNumberActive,
+                                { color: isCurrent ? colors.text.white : colors.text.primary }
                             ]}>
                                 {chapter}
                             </Text>
@@ -105,29 +110,29 @@ export default function BookSelectionModal({
     const renderBook = (item: Book) => {
         const isExpanded = item.id === expandedBookId;
         const arrowIcon = isExpanded ? 'chevron-up' : 'chevron-down';
-        const bgColor = item.testament === 'AT' ? Colors.bible.oldTestament : Colors.bible.newTestament;
+        const bgColor = item.testament === 'AT' ? colors.bible.oldTestament : colors.bible.newTestament;
 
         return (
             <View key={item.id}>
                 <TouchableOpacity
                     style={[
                         styles.bookItem,
-                        { 
-                            backgroundColor: bgColor + '10', 
-                            borderColor: isExpanded ? Colors.primary : Colors.border.light,
+                        {
+                            backgroundColor: bgColor + '10',
+                            borderColor: isExpanded ? colors.primary : colors.border.light,
                         }
                     ]}
                     onPress={() => toggleBook(item.id)}
                 >
                     <View style={styles.bookInfo}>
-                        <Text style={styles.bookName}>{item.name}</Text>
-                        <Text style={styles.bookChapters}>{item.chapters} capítulos</Text>
+                        <Text style={[styles.bookName, { color: colors.text.primary }]}>{item.name}</Text>
+                        <Text style={[styles.bookChapters, { color: colors.text.secondary }]}>{item.chapters} capítulos</Text>
                     </View>
-                    <Ionicons name={arrowIcon as any} size={24} color={Colors.primary} />
+                    <Ionicons name={arrowIcon as any} size={24} color={colors.primary} />
                 </TouchableOpacity>
 
                 {isExpanded && (
-                    <View style={styles.chaptersContainer}>
+                    <View style={[styles.chaptersContainer, { backgroundColor: colors.background.primary }]}>
                         {renderChapters(item)}
                     </View>
                 )}
@@ -137,7 +142,7 @@ export default function BookSelectionModal({
 
     const renderSection = (title: string, data: Book[]) => (
         <View style={styles.section} key={title}>
-            <Text style={styles.sectionTitle}>{title}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{title}</Text>
             {data.map(renderBook)}
         </View>
     );
@@ -152,23 +157,23 @@ export default function BookSelectionModal({
             <TouchableWithoutFeedback onPress={onClose}>
                 <View style={styles.modalOverlay}>
                     <TouchableWithoutFeedback>
-                        <View style={styles.modalContent}>
-                            <View style={styles.header}>
-                                <Text style={styles.title}>Seleccionar Libro y Capítulo</Text>
+                        <View style={[styles.modalContent, { backgroundColor: colors.background.primary }]}>
+                            <View style={[styles.header, { borderBottomColor: colors.border.light }]}>
+                                <Text style={[styles.title, { color: colors.text.primary }]}>Seleccionar Libro y Capítulo</Text>
                                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                                    <Ionicons name="close" size={28} color={Colors.text.secondary} />
+                                    <Ionicons name="close" size={28} color={colors.text.secondary} />
                                 </TouchableOpacity>
                             </View>
 
                             {isLoading ? (
                                 <View style={styles.loadingContainer}>
-                                    <ActivityIndicator size="large" color={Colors.primary} />
-                                    <Text style={styles.loadingText}>Cargando libros...</Text>
+                                    <ActivityIndicator size="large" color={colors.primary} />
+                                    <Text style={[styles.loadingText, { color: colors.text.secondary }]}>Cargando libros...</Text>
                                 </View>
                             ) : (
                                 <ScrollView contentContainerStyle={styles.listContainer}>
                                     {renderSection('Antiguo Testamento', oldTestamentBooks)}
-                                    <View style={styles.separator} />
+                                    <View style={[styles.separator, { backgroundColor: colors.border.light }]} />
                                     {renderSection('Nuevo Testamento', newTestamentBooks)}
                                 </ScrollView>
                             )}
@@ -187,8 +192,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
-        height: '80%', // Altura del modal
-        backgroundColor: Colors.background.primary,
+        height: '80%',
         borderTopLeftRadius: Layout.borderRadius.xl,
         borderTopRightRadius: Layout.borderRadius.xl,
         paddingTop: Layout.spacing.md,
@@ -200,12 +204,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: Layout.spacing.lg,
         paddingBottom: Layout.spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.border.light,
     },
     title: {
         fontSize: Layout.fontSize.xl,
         fontWeight: '700',
-        color: Colors.text.primary,
     },
     closeButton: {
         padding: Layout.spacing.xs,
@@ -216,7 +218,6 @@ const styles = StyleSheet.create({
     },
     separator: {
         height: 1,
-        backgroundColor: Colors.border.light,
         marginVertical: Layout.spacing.lg,
     },
     section: {
@@ -225,7 +226,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: Layout.fontSize.xl,
         fontWeight: '700',
-        color: Colors.text.primary,
         marginBottom: Layout.spacing.md,
         textAlign: 'center',
     },
@@ -237,7 +237,6 @@ const styles = StyleSheet.create({
         marginBottom: Layout.spacing.sm,
         borderRadius: Layout.borderRadius.md,
         borderWidth: 1,
-        borderColor: Colors.border.light,
     },
     bookInfo: {
         flex: 1,
@@ -245,47 +244,34 @@ const styles = StyleSheet.create({
     bookName: {
         fontSize: Layout.fontSize.lg,
         fontWeight: '600',
-        color: Colors.text.primary,
     },
     bookChapters: {
         fontSize: Layout.fontSize.sm,
-        color: Colors.text.secondary,
         marginTop: 2,
     },
     chaptersContainer: {
         paddingHorizontal: Layout.spacing.sm,
         paddingVertical: Layout.spacing.md,
-        backgroundColor: Colors.background.primary,
-        marginBottom: Layout.spacing.sm, 
+        marginBottom: Layout.spacing.sm,
     },
     chaptersGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'flex-start',
-        marginHorizontal: -Layout.spacing.xs, 
+        marginHorizontal: -Layout.spacing.xs,
     },
     chapterItem: {
-        width: '18.4%', 
+        width: '18.4%',
         aspectRatio: 1,
         margin: Layout.spacing.xs,
-        backgroundColor: Colors.background.card,
         borderRadius: Layout.borderRadius.sm,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: Colors.border.light,
-    },
-    chapterItemActive: {
-        backgroundColor: Colors.primary,
-        borderColor: Colors.primary,
     },
     chapterNumber: {
-        fontSize: Layout.fontSize.md, 
+        fontSize: Layout.fontSize.md,
         fontWeight: '600',
-        color: Colors.text.primary,
-    },
-    chapterNumberActive: {
-        color: Colors.text.white,
     },
     loadingContainer: {
         flex: 1,
@@ -295,6 +281,5 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: Layout.spacing.md,
         fontSize: Layout.fontSize.md,
-        color: Colors.text.secondary,
     }
 });

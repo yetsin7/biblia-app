@@ -11,8 +11,13 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Modal,
+    Pressable,
+    Share,
+    Clipboard,
 } from 'react-native';
-import { Colors, Layout } from '../constants';
+import { Layout } from '../constants';
+import { useColors } from '../hooks/useColors';
 import { BibleQueries } from '../services/database/BibleQueries';
 import { Book, Verse } from '../types/Biblia';
 import CustomHeader from '../components/navigation/CustomHeader';
@@ -20,6 +25,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ReadingStackParamList } from '../navigation/BottomTabNavigator';
 import BookSelectionModal from '../components/BookSelectionModal';
+import { historyService } from '../services/storage/HistoryService';
 
 type ReadingScreenRouteProp = RouteProp<
     { Reading: { bookId: number; chapter: number; bookName: string } }, 
@@ -29,9 +35,10 @@ type ReadingScreenRouteProp = RouteProp<
 type NavigationProp = StackNavigationProp<ReadingStackParamList, 'Reading'>;
 
 export default function ReadingScreen() {
+    const colors = useColors();
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<ReadingScreenRouteProp>();
-    
+
     const routeBookId = route.params?.bookId ?? 1;
     const routeChapter = route.params?.chapter ?? 1;
 
@@ -42,6 +49,8 @@ export default function ReadingScreen() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
+    const [isVerseMenuVisible, setIsVerseMenuVisible] = useState(false);
 
     // Estados para precarga
     const [previousChapterData, setPreviousChapterData] = useState<{verses: Verse[], book: Book} | null>(null);
@@ -98,7 +107,22 @@ export default function ReadingScreen() {
 
             // Precargar capítulos anterior y siguiente
             preloadAdjacentChapters(newBookId, newChapter);
-            
+
+            // Registrar en historial de lectura
+            if (bookInfo) {
+                try {
+                    await historyService.addReading(
+                        newBookId,
+                        bookInfo.name,
+                        newChapter,
+                        chapterVerses.length > 0 ? chapterVerses[chapterVerses.length - 1].verse : undefined
+                    );
+                } catch (historyError) {
+                    console.error('Error registrando lectura en historial:', historyError);
+                    // No mostramos error al usuario, es un error silencioso
+                }
+            }
+
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Error al cargar el capítulo';
             setError(errorMessage);
@@ -185,21 +209,70 @@ export default function ReadingScreen() {
         navigation.navigate('Search');
     };
 
+    const handleVerseLongPress = (verse: Verse) => {
+        setSelectedVerse(verse);
+        setIsVerseMenuVisible(true);
+    };
+
+    const closeVerseMenu = () => {
+        setIsVerseMenuVisible(false);
+        setSelectedVerse(null);
+    };
+
+    const handleCopyVerse = async () => {
+        if (!selectedVerse || !currentBook) return;
+
+        const verseText = `${currentBook.name} ${currentChapter}:${selectedVerse.verse}\n"${selectedVerse.text}"\n(RVR1960)`;
+
+        try {
+            Clipboard.setString(verseText);
+            closeVerseMenu();
+            Alert.alert('Copiado', 'Versículo copiado al portapapeles');
+        } catch (error) {
+            Alert.alert('Error', 'No se pudo copiar el versículo');
+        }
+    };
+
+    const handleCreateNote = () => {
+        closeVerseMenu();
+        Alert.alert('Próximamente', 'Crear nota desde versículo disponible pronto.');
+    };
+
+    const handleAddToFavorites = () => {
+        closeVerseMenu();
+        Alert.alert('Próximamente', 'Añadir a favoritos disponible pronto.');
+    };
+
+    const handleShareVerse = async () => {
+        if (!selectedVerse || !currentBook) return;
+
+        const verseText = `${currentBook.name} ${currentChapter}:${selectedVerse.verse}\n\n"${selectedVerse.text}"\n\n(Biblia RVR1960)`;
+
+        try {
+            await Share.share({
+                message: verseText,
+            });
+            closeVerseMenu();
+        } catch (error) {
+            console.error('Error compartiendo:', error);
+        }
+    };
+
     useEffect(() => {
         loadChapter(routeBookId, routeChapter);
     }, []);
 
     if (isLoading) {
         return (
-            <View style={styles.container}>
+            <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
                 <CustomHeader
                     title="Cargando..."
                     subtitle="RVR1960"
                     onSearchPress={handleSearchPress}
                 />
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={Colors.primary} />
-                    <Text style={styles.loadingText}>Cargando capítulo...</Text>
+                <View style={[styles.loadingContainer, { backgroundColor: colors.background.primary }]}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={[styles.loadingText, { color: colors.text.secondary }]}>Cargando capítulo...</Text>
                 </View>
             </View>
         );
@@ -207,20 +280,20 @@ export default function ReadingScreen() {
 
     if (error) {
         return (
-            <View style={styles.container}>
+            <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
                 <CustomHeader
                     title="Error"
                     subtitle="RVR1960"
                     onSearchPress={handleSearchPress}
                 />
-                <View style={styles.errorContainer}>
-                    <Ionicons name="alert-circle" size={64} color={Colors.danger} />
-                    <Text style={styles.errorText}>{error}</Text>
+                <View style={[styles.errorContainer, { backgroundColor: colors.background.primary }]}>
+                    <Ionicons name="alert-circle" size={64} color={colors.danger} />
+                    <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text>
                     <TouchableOpacity
-                        style={styles.retryButton}
+                        style={[styles.retryButton, { backgroundColor: colors.primary }]}
                         onPress={() => loadChapter(currentBookId, currentChapter)}
                     >
-                        <Text style={styles.retryButtonText}>Reintentar</Text>
+                        <Text style={[styles.retryButtonText, { color: colors.text.white }]}>Reintentar</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -228,7 +301,7 @@ export default function ReadingScreen() {
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
             <CustomHeader
                 title={currentBook ? `${currentBook.name.toUpperCase()} ${currentChapter}` : 'Cargando...'}
                 subtitle="RVR1960"
@@ -243,31 +316,36 @@ export default function ReadingScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     {verses.map((verse) => (
-                        <View key={verse.id} style={styles.verseContainer}>
-                            <Text style={styles.verseNumber}>{verse.verse}</Text>
-                            <Text style={styles.verseText}>{verse.text}</Text>
-                        </View>
+                        <Pressable
+                            key={verse.id}
+                            style={styles.verseContainer}
+                            onLongPress={() => handleVerseLongPress(verse)}
+                            delayLongPress={300}
+                        >
+                            <Text style={[styles.verseNumber, { color: colors.text.secondary }]}>{verse.verse}</Text>
+                            <Text style={[styles.verseText, { color: colors.text.primary }]}>{verse.text}</Text>
+                        </Pressable>
                     ))}
                 </ScrollView>
 
                 {/* Flechas de navegación transparentes sobre el contenido */}
-                <TouchableOpacity 
-                    style={styles.leftArrow} 
+                <TouchableOpacity
+                    style={styles.leftArrow}
                     onPress={goToPreviousChapter}
                     activeOpacity={0.6}
                 >
                     <View style={styles.arrowContainer}>
-                        <Ionicons name="chevron-back" size={28} color={Colors.primary} />
+                        <Ionicons name="chevron-back" size={28} color={colors.primary} />
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={styles.rightArrow} 
+                <TouchableOpacity
+                    style={styles.rightArrow}
                     onPress={goToNextChapter}
                     activeOpacity={0.6}
                 >
                     <View style={styles.arrowContainer}>
-                        <Ionicons name="chevron-forward" size={28} color={Colors.primary} />
+                        <Ionicons name="chevron-forward" size={28} color={colors.primary} />
                     </View>
                 </TouchableOpacity>
             </View>
@@ -279,6 +357,63 @@ export default function ReadingScreen() {
                 currentChapter={currentChapter}
                 onSelect={handleBookChapterSelect}
             />
+
+            {/* Menú contextual del versículo */}
+            <Modal
+                visible={isVerseMenuVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={closeVerseMenu}
+            >
+                <Pressable style={styles.modalOverlay} onPress={closeVerseMenu}>
+                    <View style={[styles.verseMenuContainer, { backgroundColor: colors.background.card, borderColor: colors.border.light }]}>
+                        <View style={[styles.verseMenuHeader, { borderBottomColor: colors.border.light }]}>
+                            <Text style={[styles.verseMenuTitle, { color: colors.text.primary }]}>
+                                {currentBook?.name} {currentChapter}:{selectedVerse?.verse}
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity
+                            style={[styles.verseMenuItem, { borderBottomColor: colors.border.light }]}
+                            onPress={handleCopyVerse}
+                        >
+                            <Ionicons name="copy-outline" size={24} color={colors.primary} />
+                            <Text style={[styles.verseMenuItemText, { color: colors.text.primary }]}>Copiar</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.verseMenuItem, { borderBottomColor: colors.border.light }]}
+                            onPress={handleCreateNote}
+                        >
+                            <Ionicons name="create-outline" size={24} color={colors.primary} />
+                            <Text style={[styles.verseMenuItemText, { color: colors.text.primary }]}>Crear Nota</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.verseMenuItem, { borderBottomColor: colors.border.light }]}
+                            onPress={handleAddToFavorites}
+                        >
+                            <Ionicons name="heart-outline" size={24} color={colors.primary} />
+                            <Text style={[styles.verseMenuItemText, { color: colors.text.primary }]}>Añadir a Favoritos</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.verseMenuItem}
+                            onPress={handleShareVerse}
+                        >
+                            <Ionicons name="share-outline" size={24} color={colors.primary} />
+                            <Text style={[styles.verseMenuItemText, { color: colors.text.primary }]}>Compartir</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.verseMenuCancel, { backgroundColor: colors.background.secondary }]}
+                            onPress={closeVerseMenu}
+                        >
+                            <Text style={[styles.verseMenuCancelText, { color: colors.text.secondary }]}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
@@ -286,7 +421,6 @@ export default function ReadingScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background.primary,
     },
     contentContainer: {
         flex: 1,
@@ -307,7 +441,6 @@ const styles = StyleSheet.create({
     verseNumber: {
         fontSize: Layout.fontSize.xs,
         fontWeight: '600',
-        color: Colors.text.secondary,
         marginRight: Layout.spacing.sm,
         marginTop: 2,
         minWidth: 20,
@@ -317,7 +450,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: Layout.fontSize.md,
         lineHeight: 24,
-        color: Colors.text.primary,
         textAlign: 'justify',
     },
     leftArrow: {
@@ -349,36 +481,72 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: Colors.background.primary,
     },
     loadingText: {
         marginTop: Layout.spacing.lg,
         fontSize: Layout.fontSize.md,
-        color: Colors.text.secondary,
         fontWeight: '500',
     },
     errorContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: Colors.background.primary,
         padding: Layout.spacing.lg,
     },
     errorText: {
         marginTop: Layout.spacing.lg,
         fontSize: Layout.fontSize.md,
-        color: Colors.danger,
         textAlign: 'center',
         marginBottom: Layout.spacing.lg,
     },
     retryButton: {
-        backgroundColor: Colors.primary,
         paddingHorizontal: Layout.spacing.xl,
         paddingVertical: Layout.spacing.md,
         borderRadius: Layout.borderRadius.lg,
     },
     retryButtonText: {
-        color: Colors.text.white,
+        fontSize: Layout.fontSize.md,
+        fontWeight: '600',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Layout.spacing.lg,
+    },
+    verseMenuContainer: {
+        width: '90%',
+        maxWidth: 400,
+        borderRadius: Layout.borderRadius.lg,
+        borderWidth: 1,
+        overflow: 'hidden',
+    },
+    verseMenuHeader: {
+        padding: Layout.spacing.md,
+        borderBottomWidth: 1,
+    },
+    verseMenuTitle: {
+        fontSize: Layout.fontSize.md,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    verseMenuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: Layout.spacing.md,
+        borderBottomWidth: 1,
+    },
+    verseMenuItemText: {
+        fontSize: Layout.fontSize.md,
+        fontWeight: '500',
+        marginLeft: Layout.spacing.md,
+    },
+    verseMenuCancel: {
+        padding: Layout.spacing.md,
+        alignItems: 'center',
+    },
+    verseMenuCancelText: {
         fontSize: Layout.fontSize.md,
         fontWeight: '600',
     },

@@ -4,23 +4,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
   TouchableOpacity,
   TextInput,
   Modal,
   Alert,
   ActivityIndicator
 } from 'react-native';
-import { Colors, Layout } from '../constants';
+import { Layout } from '../constants';
+import { useColors } from '../hooks/useColors';
 import CustomHeader from '../components/navigation/CustomHeader';
 import SearchBar from '../components/ui/SearchBar';
 import { notesService, Note } from '../services/storage/NotesService';
 
 export default function NotesScreen() {
+  const colors = useColors();
   const navigation = useNavigation<any>();
   const [notes, setNotes] = useState<Note[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -99,30 +101,30 @@ export default function NotesScreen() {
   };
 
   const renderNote = ({ item }: { item: Note }) => (
-    <View style={styles.noteCard}>
+    <View style={[styles.noteCard, { backgroundColor: colors.background.card, borderColor: colors.border.light }]}>
       <View style={styles.noteHeader}>
-        <Text style={styles.noteTitle} numberOfLines={1}>
+        <Text style={[styles.noteTitle, { color: colors.text.primary }]} numberOfLines={1}>
           {item.title}
         </Text>
         <TouchableOpacity onPress={() => deleteNote(item.id)}>
-          <Ionicons name="trash-outline" size={20} color={Colors.danger} />
+          <Ionicons name="trash-outline" size={20} color={colors.danger} />
         </TouchableOpacity>
       </View>
-      
+
       {item.verse && (
-        <View style={styles.verseReference}>
-          <Ionicons name="book-outline" size={16} color={Colors.primary} />
-          <Text style={styles.verseReferenceText}>
+        <View style={[styles.verseReference, { backgroundColor: colors.primary + '10' }]}>
+          <Ionicons name="book-outline" size={16} color={colors.primary} />
+          <Text style={[styles.verseReferenceText, { color: colors.primary }]}>
             {item.bookName} {item.chapter}:{item.verseNumber}
           </Text>
         </View>
       )}
-      
-      <Text style={styles.noteContent} numberOfLines={3}>
+
+      <Text style={[styles.noteContent, { color: colors.text.primary }]} numberOfLines={3}>
         {item.content}
       </Text>
-      
-      <Text style={styles.noteDate}>
+
+      <Text style={[styles.noteDate, { color: colors.text.secondary }]}>
         {new Date(item.date).toLocaleDateString('es-ES', {
           day: 'numeric',
           month: 'long',
@@ -134,9 +136,9 @@ export default function NotesScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="document-text-outline" size={80} color={Colors.text.tertiary} />
-      <Text style={styles.emptyTitle}>Sin notas aún</Text>
-      <Text style={styles.emptySubtitle}>
+      <Ionicons name="document-text-outline" size={80} color={colors.text.tertiary} />
+      <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Sin notas aún</Text>
+      <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
         Crea tu primera nota tocando el botón +
       </Text>
     </View>
@@ -144,21 +146,21 @@ export default function NotesScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
         <CustomHeader
           title="Mis Notas"
           subtitle="Apuntes y reflexiones"
           showBackButton={false}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <CustomHeader
         title="Mis Notas"
         subtitle="Apuntes y reflexiones"
@@ -185,11 +187,11 @@ export default function NotesScreen() {
         />
 
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
           onPress={() => setIsModalVisible(true)}
           activeOpacity={0.8}
         >
-          <Ionicons name="add" size={28} color={Colors.text.white} />
+          <Ionicons name="add" size={28} color={colors.text.white} />
         </TouchableOpacity>
       </View>
 
@@ -200,27 +202,27 @@ export default function NotesScreen() {
         onRequestClose={() => setIsModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background.primary }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Nueva Nota</Text>
+              <Text style={[styles.modalTitle, { color: colors.text.primary }]}>Nueva Nota</Text>
               <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <Ionicons name="close" size={24} color={Colors.text.secondary} />
+                <Ionicons name="close" size={24} color={colors.text.secondary} />
               </TouchableOpacity>
             </View>
 
             <TextInput
-              style={styles.titleInput}
+              style={[styles.titleInput, { borderColor: colors.border.light, color: colors.text.primary, backgroundColor: colors.background.secondary }]}
               placeholder="Título de la nota"
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={colors.text.secondary}
               value={newNoteTitle}
               onChangeText={setNewNoteTitle}
               maxLength={50}
             />
 
             <TextInput
-              style={styles.contentInput}
+              style={[styles.contentInput, { borderColor: colors.border.light, color: colors.text.primary, backgroundColor: colors.background.secondary }]}
               placeholder="Escribe tu nota aquí..."
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={colors.text.secondary}
               value={newNoteContent}
               onChangeText={setNewNoteContent}
               multiline
@@ -229,17 +231,17 @@ export default function NotesScreen() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.modalButton, styles.cancelButton, { backgroundColor: colors.background.secondary, borderColor: colors.border.light }]}
                 onPress={() => setIsModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <Text style={[styles.cancelButtonText, { color: colors.text.secondary }]}>Cancelar</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
+                style={[styles.modalButton, styles.saveButton, { backgroundColor: colors.primary }]}
                 onPress={createNote}
               >
-                <Text style={styles.saveButtonText}>Guardar</Text>
+                <Text style={[styles.saveButtonText, { color: colors.text.white }]}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -252,7 +254,6 @@ export default function NotesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   loadingContainer: {
     flex: 1,
@@ -269,12 +270,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   noteCard: {
-    backgroundColor: Colors.background.card,
     borderRadius: Layout.borderRadius.lg,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border.light,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -290,7 +289,6 @@ const styles = StyleSheet.create({
   noteTitle: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     flex: 1,
     marginRight: Layout.spacing.sm,
   },
@@ -298,7 +296,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Layout.spacing.sm,
-    backgroundColor: Colors.primary + '10',
     paddingHorizontal: Layout.spacing.sm,
     paddingVertical: Layout.spacing.xs,
     borderRadius: Layout.borderRadius.sm,
@@ -306,19 +303,16 @@ const styles = StyleSheet.create({
   },
   verseReferenceText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.primary,
     fontWeight: '600',
     marginLeft: Layout.spacing.xs,
   },
   noteContent: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     lineHeight: 22,
     marginBottom: Layout.spacing.sm,
   },
   noteDate: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     fontWeight: '500',
   },
   addButton: {
@@ -328,7 +322,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -346,13 +339,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginTop: Layout.spacing.lg,
     marginBottom: Layout.spacing.sm,
   },
   emptySubtitle: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -362,7 +353,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.background.primary,
     borderTopLeftRadius: Layout.borderRadius.xl,
     borderTopRightRadius: Layout.borderRadius.xl,
     padding: Layout.spacing.lg,
@@ -377,28 +367,21 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   titleInput: {
     borderWidth: 1,
-    borderColor: Colors.border.light,
     borderRadius: Layout.borderRadius.md,
     padding: Layout.spacing.md,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.md,
-    backgroundColor: Colors.background.secondary,
   },
   contentInput: {
     borderWidth: 1,
-    borderColor: Colors.border.light,
     borderRadius: Layout.borderRadius.md,
     padding: Layout.spacing.md,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     height: 120,
     marginBottom: Layout.spacing.lg,
-    backgroundColor: Colors.background.secondary,
   },
   modalActions: {
     flexDirection: 'row',
@@ -412,21 +395,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: Colors.background.secondary,
     borderWidth: 1,
-    borderColor: Colors.border.light,
   },
   saveButton: {
-    backgroundColor: Colors.primary,
   },
   cancelButtonText: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.secondary,
   },
   saveButtonText: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.white,
   },
 });

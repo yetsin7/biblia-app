@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, StackHeaderProps } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Navigators
 import DrawerNavigator from './DrawerNavigator';
@@ -15,17 +16,19 @@ import SettingsScreen from '../screens/SettingsScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import NotesScreen from '../screens/NotesScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import StatsScreen from '../screens/StatsScreen';
 
 export type RootStackParamList = {
     MainTabs: undefined; // Contiene el BottomTabNavigator (incluyendo ReadingScreen)
     // Se eliminó la ruta Verses de aquí, ya que se navega directamente a la pestaña Reading.
-    
+
     // Destinos de la pantalla "Más" (Siguen siendo parte del Stack)
-    About: undefined; 
+    About: undefined;
     Settings: undefined;
     Favorites: undefined;
     Notes: undefined;
     History: undefined;
+    Stats: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -34,10 +37,11 @@ const Stack = createStackNavigator<RootStackParamList>();
 type SimpleHeaderProps = Pick<StackHeaderProps, 'navigation'>; 
 
 export default function AppNavigator() {
-    
+    const { theme } = useTheme();
+
     // Función auxiliar para renderizar el CustomHeader en pantallas simples
-    const renderSimpleHeader = (title: string, subtitle?: string) => 
-        ({ navigation }: SimpleHeaderProps) => ( 
+    const renderSimpleHeader = (title: string, subtitle?: string) =>
+        ({ navigation }: SimpleHeaderProps) => (
             <CustomHeader
                 title={title}
                 subtitle={subtitle}
@@ -48,7 +52,7 @@ export default function AppNavigator() {
 
     return (
         <>
-            <StatusBar style="dark" backgroundColor="#FFFFFF" />
+            <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
             <NavigationContainer>
                 <Stack.Navigator screenOptions={{ headerShown: false }}>
                     
@@ -77,12 +81,17 @@ export default function AppNavigator() {
                         component={NotesScreen} 
                         options={{ headerShown: true, header: renderSimpleHeader('Notas', 'Tus apuntes y marcadores') }} 
                     />
-                    <Stack.Screen 
-                        name="History" 
-                        component={HistoryScreen} 
-                        options={{ headerShown: true, header: renderSimpleHeader('Historial', 'Registro de lectura') }} 
+                    <Stack.Screen
+                        name="History"
+                        component={HistoryScreen}
+                        options={{ headerShown: true, header: renderSimpleHeader('Historial', 'Registro de lectura') }}
                     />
-                    
+                    <Stack.Screen
+                        name="Stats"
+                        component={StatsScreen}
+                        options={{ headerShown: true, header: renderSimpleHeader('Estadísticas', 'Progreso de lectura') }}
+                    />
+
                 </Stack.Navigator>
             </NavigationContainer>
         </>
